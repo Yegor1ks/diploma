@@ -1,9 +1,8 @@
 from math import floor
-
+from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-
 
 # настройка вывода трёхмерных графиков
 fig3d = plt.axes(projection='3d')
@@ -12,28 +11,28 @@ fig3d.set(zlim=(-25, 0))
 fig3d.set_xlabel("X")
 fig3d.set_ylabel("Y")
 
-
 # симуляция дна #
 
 # массив дна со случайными значениями, мат ожиданием -20 и дисперсией 20
-bot = -20 + 20 * np.random.uniform(-1, 1, (200, 200)) * np.random.uniform(-1, 1, (200, 200))
+bot = -20 + 20 * np.random.uniform(-1.5, 1.5, (200, 200)) * np.random.uniform(-1, 1, (200, 200))
 
 # Процедура сглаживания полученного массива дна относительно глубины 20 м.
 # Применяется фильтр-интегратор по строкам и столбцам, ориентирующийся на текущие
 # и предыдущие индексы, для этого значения первых(нулевых) строки и столбца равны -20
-k = 0.05  # коэффициент фильтра-интегратора
-bot[:][0] = -20
-for i in range(1, 200):
-    bot[:][i] = bot[:][i - 1] * (1 - k) + bot[:][i] * k
+k = 0.08  # коэффициент фильтра-интегратора
 
-bot[0][:] = -20
 for i in range(1, 200):
-    bot[i][:] = bot[i - 1][:] * (1 - k) + bot[i][:] * k
-# bot[0][1] = 1
+    for j in range(0, 200):
+        bot[j][0] = -20
+        bot[j][i] = bot[j][i - 1] * (1 - k) + bot[j][i] * k
+
+for i in range(1, 200):
+    for j in range(0, 200):
+        bot[0][j] = -20
+        bot[i][j] = bot[i - 1][j] * (1 - k) + bot[i][j] * k
 
 fig3d.set_title("Карта дна")
 fig3d.plot_surface(xGrid, yGrid, bot)
-
 
 # формирование сигнала #
 
@@ -61,18 +60,17 @@ bot1 = bot
 zz = np.empty((3, 6400))
 for i in range(phiN):
     phi = phi1 + (phi2 - phi1) / phiN * (i + 1)
-
     for j in range(length):
-        r = j / fd * 1500
+        r = j / fd * 1500  # дистанция
         if r > H:
             t = j / fd
             x = t * 1500 * np.sin(np.deg2rad(phi)) + 100
             y = t * 1500 * np.cos(np.deg2rad(phi)) + 1
             z = bot[floor(x)][floor(y)]
             bot1[floor(x)][floor(y)] = -25
-            zz[0][0 + 319 * i:319 * (i + 1)] = x
-            zz[1][0 + 319 * i:319 * (i + 1)] = y
-            zz[2][0 + 319 * i:319 * (i + 1)] = z
+            # zz[0][0 + 319 * i:319 * (i + 1)] = x
+            # zz[1][0 + 319 * i:319 * (i + 1)] = y
+            # zz[2][0 + 319 * i:319 * (i + 1)] = z
             a1 = np.arctan((bot[floor(x)][floor(y + 1)] - bot[floor(x)][floor(y)]) / 1)
             a2 = np.arctan(bot[floor(x)][floor(y + 1)] / y)
             A = abs(np.sin((a1 - a2) ** 2))
@@ -80,7 +78,7 @@ for i in range(phiN):
             s1[i][j] = rev1[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * t)
             s2[i][j] = rev2[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * (t - tau))
 
-fig3d.plot_surface(xGrid, yGrid, bot1)
+fig3d.plot_surface(xGrid, yGrid, bot1, cmap='cividis')
 
 ax2d, fig2d = plt.subplots()
 fig2d.set_title("Приходящие сигналы")
@@ -93,7 +91,6 @@ for i in range(20):
 
 plt.show()
 
-
 # приём сигнала #
 
 for i in range(phiN):
@@ -102,7 +99,7 @@ for i in range(phiN):
     # s1[i] = scipy.signal.hilbert(s1[i])
     # s2[i] = scipy.signal.hilbert(s2[i])
     for j in range(0, length, 100):
-        r = j / fd * 1500  # истанция
+        r = j / fd * 1500  # дистанция
         t = j / fd
         x = t * 1500 * np.sin(np.deg2rad(phi)) + 100
         y = t * 1500 * np.cos(np.deg2rad(phi)) + 1
@@ -111,7 +108,6 @@ for i in range(phiN):
 x = zz[:][0]
 y = zz[:][1]
 z = zz[:][2]
-
 
 # построение картины дна по полученному сигналу #
 
