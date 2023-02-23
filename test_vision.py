@@ -1,5 +1,5 @@
 from math import floor
-from matplotlib import cm
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
@@ -57,7 +57,7 @@ for i in range(phiN):
     rev2[i][:] = rev2[i][:] * reverb
 
 bot1 = bot
-zz = np.empty((3, 6400))
+zz = np.zeros((3, 6400))
 for i in range(phiN):
     phi = phi1 + (phi2 - phi1) / phiN * (i + 1)
     for j in range(length):
@@ -86,24 +86,39 @@ fig2d.grid(True)
 fig2d.set_xlabel("t")
 fig2d.set_ylabel("S(t)")
 for i in range(20):
-    # fig2d.plot(np.arange(373), np.matrix(rev1[0][:]).T)
-    fig2d.plot(np.arange(373), np.matrix(s1[i][:]).T)
-
-plt.show()
+    # fig2d.plot(np.arange(length), np.matrix(rev1[0]).T)
+    fig2d.plot(np.arange(length), np.matrix(s1[i]).T)
 
 # приём сигнала #
 
+Fs1 = np.zeros((phiN, length))
+Fs2 = np.zeros((phiN, length))
 for i in range(phiN):
-    phi = phi1 + (phi2 - phi1) / phiN * i
+    # Частотный спектр сигнала, БПФ
+    Fs1[i] = scipy.fft.fft(s1[i])
+    Fs2[i] = scipy.fft.fft(s2[i])
+    # прямой спектральный анализ
+    Fs1[i] = np.sqrt(Fs1[i] * Fs1[i])
+    Fs2[i] = np.sqrt(Fs2[i] * Fs2[i])
 
-    # s1[i] = scipy.signal.hilbert(s1[i])
-    # s2[i] = scipy.signal.hilbert(s2[i])
-    for j in range(0, length, 100):
-        r = j / fd * 1500  # дистанция
-        t = j / fd
-        x = t * 1500 * np.sin(np.deg2rad(phi)) + 100
-        y = t * 1500 * np.cos(np.deg2rad(phi)) + 1
-        z = bot[floor(x)][floor(y)]
+    # пока что непонятно зачем
+    # phi = phi1 + (phi2 - phi1) / phiN * i
+    # for j in range(0, length, 100):
+    #     r = j / fd * 1500  # дистанция
+    #     t = j / fd
+    #     x = t * 1500 * np.sin(np.deg2rad(phi)) + 100
+    #     y = t * 1500 * np.cos(np.deg2rad(phi)) + 1
+    #     z = bot[floor(x)][floor(y)]
+
+plt.figure()
+# FFs1 = np.zeros(length)
+# FFs1 = np.matrix(Fs1[0][0:fd/2])
+# plt.plot(np.arange(fd/2), FFs1)
+plt.grid(True)
+plt.plot(np.arange(length), np.matrix(Fs1[0] / max(Fs1[0])).T)
+plt.suptitle('FFT (normalized)')
+
+plt.show()
 
 x = zz[:][0]
 y = zz[:][1]
