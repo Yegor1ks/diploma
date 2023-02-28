@@ -130,9 +130,9 @@ xv = np.arange(min(x), max(x), 80)
 yv = np.arange(min(y), max(y), 80)
 X, Y = np.meshgrid(xv, yv)
 
-Z = scipy.interpolate.griddata(x.ravel(), y.ravel(), z.ravel(), X, Y)
+# Z = scipy.interpolate.griddata(x.ravel(), y.ravel(), z.ravel(), X, Y)
 
 # figure4 = plt.figure()
 # ax = figure4.add_subplot(projection='3d')
-fig3d.plot_wireframe(X, Y, Z)
+# fig3d.plot_wireframe(X, Y, Z)
 plt.show()
