@@ -91,7 +91,7 @@ for i in range(20):
 
 # приём сигнала #
 
-Fs1 = np.zeros((phiN, length))
+Fs1 = np.zeros((phiN, length))  # буфер для спектра
 Fs2 = np.zeros((phiN, length))
 for i in range(phiN):
     # Частотный спектр сигнала, БПФ
@@ -115,8 +115,8 @@ plt.figure()
 # FFs1 = np.matrix(Fs1[0][0:fd/2])
 # plt.plot(np.arange(fd/2), FFs1)
 plt.grid(True)
-plt.plot(np.arange(length), np.matrix(Fs1[0] / max(Fs1[0])).T)
-plt.suptitle('FFT (normalized)')
+plt.plot(np.arange(0, fd, fd / length), np.matrix(Fs1[0] / max(Fs1[0])).T)
+plt.suptitle('FFT (нормализованное)')
 
 plt.show()
 
