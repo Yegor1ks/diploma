@@ -1,4 +1,5 @@
 from math import floor
+from numpy import deg2rad as rad
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,7 +14,7 @@ fig3d.set_ylabel("Y")
 
 # симуляция дна #
 
-# массив дна со случайными значениями, мат ожиданием -20 и дисперсией 20
+# массив дна со случайными значениями, мат ожиданием -20 и дисперсией 1.5
 bot = -20 + 20 * np.random.uniform(-1.5, 1.5, (200, 200)) * np.random.uniform(-1, 1, (200, 200))
 
 # Процедура сглаживания полученного массива дна относительно глубины 20 м.
@@ -38,7 +39,7 @@ fig3d.plot_surface(xGrid, yGrid, bot)
 
 phi1 = -45  # граничные углы обзора
 phi2 = 45
-phiN = 20  # количество рассматриваемых углов
+phiN = 20  # количество рассматриваемых углов рыскания
 
 H = 20  # глубина
 
@@ -63,20 +64,22 @@ for i in range(phiN):
     for j in range(length):
         r = j / fd * 1500  # дистанция
         if r > H:
-            t = j / fd
-            x = t * 1500 * np.sin(np.deg2rad(phi)) + 100
-            y = t * 1500 * np.cos(np.deg2rad(phi)) + 1
+            dt = j / fd
+            # координаты точек дна от которых отражается сигнал
+            x = dt * 1500 * np.sin(rad(phi)) + 100
+            y = dt * 1500 * np.cos(rad(phi)) + 1
             z = bot[floor(x)][floor(y)]
             bot1[floor(x)][floor(y)] = -25
-            # zz[0][0 + 319 * i:319 * (i + 1)] = x
-            # zz[1][0 + 319 * i:319 * (i + 1)] = y
-            # zz[2][0 + 319 * i:319 * (i + 1)] = z
+            # угол наклона дна относительно соседних точек
             a1 = np.arctan((bot[floor(x)][floor(y + 1)] - bot[floor(x)][floor(y)]) / 1)
+            # угол от антенны до точки на дне
             a2 = np.arctan(bot[floor(x)][floor(y + 1)] / y)
-            A = abs(np.sin((a1 - a2) ** 2))
+            # обратное отражение сигнала от дна
+            A = np.sin(a1 - a2) ** 2
+            # эхосигнал (с реверберацией) на двух элементах ПА
             tau = 0
-            s1[i][j] = rev1[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * t)
-            s2[i][j] = rev2[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * (t - tau))
+            s1[i][j] = rev1[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * dt)
+            s2[i][j] = rev2[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * (dt - tau))
 
 fig3d.plot_surface(xGrid, yGrid, bot1, cmap='cividis')
 
@@ -91,23 +94,23 @@ for i in range(20):
 
 # приём сигнала #
 
-Fs1 = np.zeros((phiN, length))  # буфер для спектра
-Fs2 = np.zeros((phiN, length))
+Fs1 = np.zeros((phiN, length), dtype=complex)  # буфер для спектра
+Fs2 = np.zeros((phiN, length), dtype=complex)
 for i in range(phiN):
     # Частотный спектр сигнала, БПФ
     Fs1[i] = scipy.fft.fft(s1[i])
     Fs2[i] = scipy.fft.fft(s2[i])
     # прямой спектральный анализ
-    Fs1[i] = np.sqrt(Fs1[i] * Fs1[i])
-    Fs2[i] = np.sqrt(Fs2[i] * Fs2[i])
+    Fs1[i] = np.sqrt(Fs1[i] ** 2).real
+    Fs2[i] = np.sqrt(Fs2[i] ** 2).real
 
     # пока что непонятно зачем
     # phi = phi1 + (phi2 - phi1) / phiN * i
     # for j in range(0, length, 100):
     #     r = j / fd * 1500  # дистанция
     #     t = j / fd
-    #     x = t * 1500 * np.sin(np.deg2rad(phi)) + 100
-    #     y = t * 1500 * np.cos(np.deg2rad(phi)) + 1
+    #     x = t * 1500 * np.sin(rad(phi)) + 100
+    #     y = t * 1500 * np.cos(rad(phi)) + 1
     #     z = bot[floor(x)][floor(y)]
 
 plt.figure()
@@ -115,7 +118,7 @@ plt.figure()
 # FFs1 = np.matrix(Fs1[0][0:fd/2])
 # plt.plot(np.arange(fd/2), FFs1)
 plt.grid(True)
-plt.plot(np.arange(0, fd, fd / length), np.matrix(Fs1[0] / max(Fs1[0])).T)
+plt.plot(np.arange(0, fd, fd / length), np.real(Fs1[0] / max(Fs1[0])).T)
 plt.suptitle('FFT (нормализованное)')
 
 plt.show()
