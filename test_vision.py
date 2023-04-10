@@ -59,6 +59,8 @@ for i in range(phiN):
 
 bot1 = bot
 zz = np.zeros((3, 6400))
+
+# карта линий, о которым идёт ХН
 for i in range(phiN):
     phi = phi1 + (phi2 - phi1) / phiN * (i + 1)
     for j in range(length):
@@ -101,8 +103,8 @@ for i in range(phiN):
     Fs1[i] = scipy.fft.fft(s1[i])
     Fs2[i] = scipy.fft.fft(s2[i])
     # прямой спектральный анализ
-    Fs1[i] = np.sqrt(Fs1[i] ** 2).real
-    Fs2[i] = np.sqrt(Fs2[i] ** 2).real
+    Fs1[i] = np.sqrt(Fs1[i].real ** 2 + Fs1[i].imag ** 2)
+    Fs2[i] = np.sqrt(Fs2[i].real ** 2 + Fs2[i].imag ** 2)
 
     # пока что непонятно зачем
     # phi = phi1 + (phi2 - phi1) / phiN * i
