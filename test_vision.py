@@ -1,6 +1,5 @@
 from math import floor
 from numpy import deg2rad as rad
-
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
@@ -31,9 +30,6 @@ for i in range(1, 200):
     for j in range(0, 200):
         bot[0][j] = -20
         bot[i][j] = bot[i - 1][j] * (1 - k) + bot[i][j] * k
-
-fig3d.set_title("Карта дна")
-fig3d.plot_surface(xGrid, yGrid, bot)
 
 # формирование сигнала #
 
@@ -84,12 +80,13 @@ for i in range(phiN):
             s2[i][j] = rev2[i][j] + A * 1000 / (rr[j] ** 2) * np.sin(2 * np.pi * fs * (dt - tau))
 
 fig3d.plot_surface(xGrid, yGrid, bot1, cmap='cividis')
+fig3d.set_title("Карта дна")
 
 ax2d, fig2d = plt.subplots()
 fig2d.set_title("Приходящие сигналы")
 fig2d.grid(True)
-fig2d.set_xlabel("t")
-fig2d.set_ylabel("S(t)")
+fig2d.set_xlabel("t, сек")
+fig2d.set_ylabel("S(t), дБ")
 for i in range(20):
     # fig2d.plot(np.arange(length), np.matrix(rev1[0]).T)
     fig2d.plot(np.arange(length), np.matrix(s1[i]).T)
@@ -122,6 +119,8 @@ plt.figure()
 plt.grid(True)
 plt.plot(np.arange(0, fd, fd / length), np.real(Fs1[0] / max(Fs1[0])).T)
 plt.suptitle('FFT (нормализованное)')
+plt.xlabel("f, Гц")
+plt.ylabel("F(f) (нормализованное)")
 
 plt.show()
 
